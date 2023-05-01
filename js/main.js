@@ -31,7 +31,6 @@ const toggleCommentSection = (chosenPostID) => {
         return null;
     }
     else{
-        console.log(section);
         section.classList.toggle("hide")
         return section;
     }
@@ -71,7 +70,7 @@ const addButtonListeners = () =>{
     if(buttons){
         for(let i = 0; i < buttons.length; i++){
             postId = buttons[i].dataset.postId;
-            buttons[i].addEventListener("click", (event) => {toggleComments(event, postId)});
+            buttons[i].addEventListener("click", (event) => {toggleComments(this.event, buttons[i].dataset.postId)});
         }
         return buttons;
     }
@@ -83,27 +82,25 @@ const removeButtonListeners = () =>{
     if(buttons){
         for(let i = 0; i < buttons.length; i++){
             postId = buttons[i].dataset.postId;
-            console.log(buttons[i]);
-            buttons[i].removeEventListener("click", (event) => {toggleComments(event, postId)});
+            buttons[i].removeEventListener("click", (event) => {toggleComments(this.event, buttons[i].dataset.postId)});
         }
         return buttons;
     }
 }
+
 const createComments = (comment) =>{
     if(!comment)
         return;
     const fragment = document.createDocumentFragment();
     for(let i = 0; i < comment.length; i++){
-        let newArticle = document.createElement("article");
+        const newArticle = document.createElement("article");
         let name = document.createElement("h3");
         name.textContent = comment[i].name;
-        let body = document.createElement("p");
+        const body = document.createElement("p");
         body.textContent = comment[i].body;
-        let email = document.createElement("p");
+        const email = document.createElement("p");
         email.textContent = `From: ${comment[i].email}`;
-        newArticle.append(name);
-        newArticle.append(body);
-        newArticle.append(email);
+        newArticle.append(name, body, email);
         fragment.append(newArticle);
     }
     return fragment;
@@ -240,8 +237,6 @@ const toggleComments = (event, postID) => {
         return;
     else{
         event.target.listener = true;
-        console.log(postID)
-        console.log(toggleCommentSection(postID));
         return [toggleCommentSection(postID), toggleCommentButton(postID)];
     }
 }
