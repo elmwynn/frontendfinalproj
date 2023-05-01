@@ -1,7 +1,7 @@
 
 const createElemWithText = (userElement = "p", text= "", userClass) =>{
     newElement = document.createElement(userElement);
-    newElement.innerText = text;
+    newElement.textContent = text;
     if(userClass){
         newElement.className = userClass;
     }
@@ -15,8 +15,8 @@ const createSelectOptions = (data) =>{
         const optionsArray = []
         for(let i = 0; i < data.length; i++){
             const option = document.createElement("option");
-            option.textContent = data[i].name;
             option.value = data[i].id;
+            option.textContent = data[i].name;
             optionsArray.push(option);
         }
         return optionsArray;
@@ -105,15 +105,20 @@ const createComments = (comment) =>{
     return fragment;
 }
 
-const populateSelectMenu = (data) => {
-    if(!data)
+const populateSelectMenu = (users) => {
+    if(!users)
         return;
-    const menuElement = document.getElementById("selectMenu");
-    const optionArray = createSelectOptions(data);
-    for(let i=0; i < optionArray.length; i++)
-        menuElement.append(optionArray[i]);
-    return menuElement;
+    else{
+        const menuElement = document.getElementById("selectMenu");
+        const optionArray = createSelectOptions(users);
+        for(let i = 0; i < optionArray.length; i++){
+            menuElement.appendChild(optionArray[i]);
+        }
+        return menuElement;
+        }
 }
+
+
 
 
 const getUsers = async() => {
@@ -139,12 +144,11 @@ const getUserPosts = async(userID) =>{
         }
         });
         const jsonUserPosts = await allUserPosts.json();
-        const userPostArray = [];
-        await jsonUserPosts.filter(body => {
+        const data =await jsonUserPosts.filter(body => {
             if(body.userId === userID)
-                userPostArray.push(body);
+               return body;
         });
-        return userPostArray;
+        return data;
     }
 
 }
@@ -260,13 +264,9 @@ const refreshPosts = async (posts) => {
         return;
     const toRemove = document.querySelector("main")
     const removeButtons = removeButtonListeners();
-    console.log(removeButtons);
     const main = deleteChildElements(toRemove);
-    console.log(main);
     const fragment = await displayPosts(posts);
-    console.log(fragment);
     const addButtons =  addButtonListeners();
-    console.log(addButtons);
     return [
         removeButtons, main, fragment, addButtons
     ];
@@ -275,26 +275,28 @@ const refreshPosts = async (posts) => {
 const selectMenuChangeEventHandler = async (event) => {
     if(!event)
         return;
-    const menuElement = document.getElementById("selectMenu");
-    menuElement.disabled = true;
-    console.log("works");
-    const userId = event.target.value || 1;
+    document.getElementById("selectMenu").disabled = true;
+    const userId = parseInt(event?.target?.value) || 1;
+    console.log(typeof userId);
     const posts = await getUserPosts(userId);
-    const refreshPostArray = await refreshPosts(posts);
-    menuElement.disabled = false;
-    console.log("works here too");
+    console.log(posts);
+    const refreshPostArray =  await refreshPosts(posts);
+    document.getElementById("selectMenu").disabled  = false;
+    
     return [userId, posts, refreshPostArray];
+
 }
 
 const initPage = async() => {
     const users = await getUsers();
-    const select = populateSelectMenu(users);
+    const select = await populateSelectMenu(users);
     return [users, select];
 }
 
 const initApp = () => {
     initPage();
     const menuElement = document.getElementById("selectMenu");
-    menuElement.addEventListener("change", selectMenuChangeEventHandler, false);
-    document.addEventListener("DOMContentedLoaded", initApp, false);
+    menuElement.addEventListener("change", selectMenuChangeEventHandler);
 }
+
+document.addEventListener("DOMContentLoaded", initApp);
