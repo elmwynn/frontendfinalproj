@@ -38,8 +38,6 @@ const toggleCommentSection = (chosenPostID) => {
 
 const toggleCommentButton = (chosenPostID) =>{
     const button = document.querySelector(`button[data-post-id="${chosenPostID}"]`);
-    console.log("from toggle function");
-    console.log(chosenPostID);
     if(!chosenPostID)
         return;
     else if(!(button)){
@@ -50,7 +48,6 @@ const toggleCommentButton = (chosenPostID) =>{
             button.textContent = "Hide Comments";
         else
             button.textContent = "Show Comments";
-        
         return button;
     }
 }
@@ -58,8 +55,10 @@ const toggleCommentButton = (chosenPostID) =>{
 const deleteChildElements = (userElement) => {
     if(!(userElement instanceof Element))
         return;
-    while(userElement.firstChild){
-        userElement.removeChild(userElement.firstChild);
+    let childVariable = userElement.lastElementChild;    
+    while(childVariable){
+        userElement.removeChild(childVariable);
+        childVariable = userElement.lastElementChild; 
     }
     return userElement;
 }
@@ -111,15 +110,19 @@ const populateSelectMenu = (data) => {
         return;
     const menuElement = document.getElementById("selectMenu");
     const optionArray = createSelectOptions(data);
-    optionArray.forEach((option) => {
-        menuElement.append(option);
-    });
+    for(let i=0; i < optionArray.length; i++)
+        menuElement.append(optionArray[i]);
     return menuElement;
 }
 
 
-const getUsers = async() =>{
-    const allUsers = await fetch("https://jsonplaceholder.typicode.com/users"); 
+const getUsers = async() => {
+    const allUsers = await fetch("https://jsonplaceholder.typicode.com/users", {
+    method: "GET",
+    headers:{
+        Accept: "application/json"
+    }   
+    }); 
     const jsonUserData = await allUsers.json();
     return jsonUserData;
 }
@@ -129,13 +132,19 @@ const getUserPosts = async(userID) =>{
     if(!userID || !(Number.isInteger(userID)))
         return;
     else{
-        const allUserPosts = await fetch("https://jsonplaceholder.typicode.com/posts");
-        const jsonUserPosts = await allUserPosts.json();
-        const data = await jsonUserPosts.filter(body => {
-            if(body.userId === userID)
-                return body;
+        const allUserPosts = await fetch("https://jsonplaceholder.typicode.com/posts", {
+        method: "GET",
+        headers:{
+            Accept: "application/json"
+        }
         });
-        return data;
+        const jsonUserPosts = await allUserPosts.json();
+        const userPostArray = [];
+        await jsonUserPosts.filter(body => {
+            if(body.userId === userID)
+                userPostArray.push(body);
+        });
+        return userPostArray;
     }
 
 }
@@ -166,7 +175,12 @@ const getPostComments = async(postID) => {
     if(!postID || !(Number.isInteger(postID)))
         return;
     else {
-        const comments = await fetch("https://jsonplaceholder.typicode.com/comments"); 
+        const comments = await fetch("https://jsonplaceholder.typicode.com/comments", {
+        method: "GET",
+        headers:{
+            Accept: "application/json"
+        }    
+        }); 
         const jsonComments = await comments.json();
         const data = await jsonComments.filter(comment =>{ 
             if(comment.postId === postID)
@@ -244,10 +258,15 @@ const toggleComments = (event, postID) => {
 const refreshPosts = async (posts) => {
     if(!posts)
         return;
-    const removeButtons = removeButtonListeners()
-    const main = deleteChildElements("main");
+    const toRemove = document.querySelector("main")
+    const removeButtons = removeButtonListeners();
+    console.log(removeButtons);
+    const main = deleteChildElements(toRemove);
+    console.log(main);
     const fragment = await displayPosts(posts);
+    console.log(fragment);
     const addButtons =  addButtonListeners();
+    console.log(addButtons);
     return [
         removeButtons, main, fragment, addButtons
     ];
@@ -256,12 +275,14 @@ const refreshPosts = async (posts) => {
 const selectMenuChangeEventHandler = async (event) => {
     if(!event)
         return;
-    const menuElement = document.getElementById("selectMenu")
-    menuElement.disabled = true
+    const menuElement = document.getElementById("selectMenu");
+    menuElement.disabled = true;
+    console.log("works");
     const userId = event.target.value || 1;
     const posts = await getUserPosts(userId);
     const refreshPostArray = await refreshPosts(posts);
     menuElement.disabled = false;
+    console.log("works here too");
     return [userId, posts, refreshPostArray];
 }
 
